@@ -1,11 +1,12 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
+	"context"
+	"flag"
+	"log"
 
-	uptrace "github.com/persona-ae/terraform-provider-uptrace/internal/services"
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/persona-ae/terraform-provider-uptrace/internal/provider"
 )
 
 var (
@@ -17,27 +18,20 @@ var (
 	// https://goreleaser.com/cookbooks/using-main.version/
 )
 
-func prettyPrintResult(response any, err error) {
-	if err != nil {
-		fmt.Printf("Error: %s\n", err)
-		os.Exit(1)
-	}
-	pretty, _ := json.MarshalIndent(response, "", "  ")
-	fmt.Println(string(pretty))
-}
-
 func main() {
-	projectId := "3255"
-	token := "OEkftWB6p3JMXu3MVw9LhA"
+	var debug bool
 
-	u := uptrace.NewUptraceClient(projectId, token)
+	flag.BoolVar(&debug, "debug", false, "set to true to run the provider with support for debuggers like delve")
+	flag.Parse()
 
-	fmt.Println("Getting all...")
-	monitors, err := u.GetMonitors()
-	prettyPrintResult(monitors, err)
+	opts := providerserver.ServeOpts{
+		Address: "registry.terraform.io/persona-ae/uptrace",
+		Debug:   debug,
+	}
 
-	id := "3592"
-	fmt.Printf("Getting by id %s...\n", id)
-	monitor, err := u.GetMonitorById(id)
-	prettyPrintResult(monitor, err)
+	err := providerserver.Serve(context.Background(), provider.New(version), opts)
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 }

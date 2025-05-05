@@ -2,6 +2,7 @@ package uptrace
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -28,7 +29,7 @@ func NewUptraceClient(projectID, token string) *UptraceClient {
 	}
 }
 
-func (u *UptraceClient) do(method, endpoint string, body []byte, out interface{}) error {
+func (u *UptraceClient) do(ctx context.Context, method, endpoint string, body []byte, out interface{}) error {
 	url := u.BaseURL + endpoint
 
 	var reqBody io.Reader
@@ -36,7 +37,7 @@ func (u *UptraceClient) do(method, endpoint string, body []byte, out interface{}
 		reqBody = bytes.NewBuffer(body)
 	}
 
-	req, err := http.NewRequest(method, url, reqBody)
+	req, err := http.NewRequestWithContext(ctx, method, url, reqBody)
 	if err != nil {
 		return fmt.Errorf("creating request: %w", err)
 	}
@@ -68,21 +69,21 @@ func (u *UptraceClient) do(method, endpoint string, body []byte, out interface{}
 	return nil
 }
 
-func (u *UptraceClient) GetMonitors() (*GetMonitorsResponse, error) {
+func (u *UptraceClient) GetMonitors(ctx context.Context) (*GetMonitorsResponse, error) {
 	endpoint := fmt.Sprintf("/internal/v1/projects/%s/monitors", u.ProjectID)
 
 	var result GetMonitorsResponse
-	if err := u.do("GET", endpoint, nil, &result); err != nil {
+	if err := u.do(ctx, "GET", endpoint, nil, &result); err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
-func (u *UptraceClient) GetMonitorById(id string) (*GetMonitorByIdResponse, error) {
+func (u *UptraceClient) GetMonitorById(ctx context.Context, id string) (*GetMonitorByIdResponse, error) {
 	endpoint := fmt.Sprintf("/internal/v1/projects/%s/monitors/%s", u.ProjectID, id)
 
 	var result GetMonitorByIdResponse
-	if err := u.do("GET", endpoint, nil, &result); err != nil {
+	if err := u.do(ctx, "GET", endpoint, nil, &result); err != nil {
 		return nil, err
 	}
 
