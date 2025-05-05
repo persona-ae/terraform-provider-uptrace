@@ -1,15 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
-
 package main
 
 import (
-	"context"
-	"flag"
-	"log"
+	"encoding/json"
+	"fmt"
+	"os"
 
-	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/persona-ae/terraform-provider-uptrace/internal/provider"
+	uptrace "github.com/persona-ae/terraform-provider-uptrace/internal/services"
 )
 
 var (
@@ -21,20 +17,27 @@ var (
 	// https://goreleaser.com/cookbooks/using-main.version/
 )
 
-func main() {
-	var debug bool
-
-	flag.BoolVar(&debug, "debug", false, "set to true to run the provider with support for debuggers like delve")
-	flag.Parse()
-
-	opts := providerserver.ServeOpts{
-		Address: "registry.terraform.io/persona-ae/uptrace",
-		Debug:   debug,
-	}
-
-	err := providerserver.Serve(context.Background(), provider.New(version), opts)
-
+func prettyPrintResult(response any, err error) {
 	if err != nil {
-		log.Fatal(err.Error())
+		fmt.Printf("Error: %s\n", err)
+		os.Exit(1)
 	}
+	pretty, _ := json.MarshalIndent(response, "", "  ")
+	fmt.Println(string(pretty))
+}
+
+func main() {
+	projectId := "3255"
+	token := "OEkftWB6p3JMXu3MVw9LhA"
+
+	u := uptrace.NewUptraceClient(projectId, token)
+
+	fmt.Println("Getting all...")
+	monitors, err := u.GetMonitors()
+	prettyPrintResult(monitors, err)
+
+	id := "3592"
+	fmt.Printf("Getting by id %s...\n", id)
+	monitor, err := u.GetMonitorById(id)
+	prettyPrintResult(monitor, err)
 }
