@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	data_sources "github.com/persona-ae/terraform-provider-uptrace/internal/data-sources"
 )
 
 // Ensure UptraceProvider satisfies various provider interfaces.
@@ -77,7 +78,9 @@ func (p *UptraceProvider) EphemeralResources(ctx context.Context) []func() ephem
 }
 
 func (p *UptraceProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{}
+	return []func() datasource.DataSource{
+		data_sources.NewMonitorDataSource,
+	}
 }
 
 func (p *UptraceProvider) Functions(ctx context.Context) []func() function.Function {
