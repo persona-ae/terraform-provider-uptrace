@@ -30,5 +30,14 @@ ensure-gh-auth: ensure-gh
 
 .PHONY: release
 release: ensure-go-releaser ensure-gh-auth
-	@GITHUB_TOKEN=$$(gh auth token); \
-	goreleaser release --clean
+	@if [ -z "$(TAG)" ]; then \
+		echo "ERROR: TAG is required. Usage: make release TAG=v0.1.1"; \
+		exit 1; \
+	fi; \
+	if ! git rev-parse $(TAG) >/dev/null 2>&1; then \
+		echo "Creating git tag $(TAG)"; \
+		git tag $(TAG); \
+	fi; \
+	git push origin $(TAG); \
+	git fetch --tags; \
+	GITHUB_TOKEN=$$(gh auth token) goreleaser release --clean
