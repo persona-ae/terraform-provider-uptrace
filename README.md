@@ -1,5 +1,7 @@
 # terraform-provider-uptrace
 
+> This repo draws on the structure laid out by [this scaffolding repo](https://github.com/hashicorp/terraform-provider-scaffolding-framework)
+
 
 ## Pushing a new release:
 > from [this article](https://thekevinwang.com/2023/10/05/build-publish-terraform-provider#github-release)
