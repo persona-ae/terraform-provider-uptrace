@@ -5,7 +5,6 @@ package provider
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	data_sources "github.com/persona-ae/terraform-provider-uptrace/internal/data-sources"
+	uptrace "github.com/persona-ae/terraform-provider-uptrace/internal/services"
 )
 
 // Ensure UptraceProvider satisfies various provider interfaces.
@@ -52,19 +52,22 @@ func (p *UptraceProvider) Schema(ctx context.Context, req provider.SchemaRequest
 }
 
 func (p *UptraceProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	var data ScaffoldingProviderModel
+	var config struct {
+		Token     types.String `tfsdk:"token"`
+		ProjectID types.String `tfsdk:"project_id"`
+	}
 
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
+	diags := req.Config.Get(ctx, &config)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Configuration values are now available.
-	// if data.Endpoint.IsNull() { /* ... */ }
+	client := uptrace.NewUptraceClient(
+		config.ProjectID.ValueString(),
+		config.Token.ValueString(),
+	)
 
-	// Example client configuration for data sources and resources
-	client := http.DefaultClient
 	resp.DataSourceData = client
 	resp.ResourceData = client
 }
