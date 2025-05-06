@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 const (
@@ -29,12 +31,22 @@ func NewUptraceClient(projectID, token string) *UptraceClient {
 	}
 }
 
-func (u *UptraceClient) do(ctx context.Context, method, endpoint string, body []byte, out interface{}) error {
+func (u *UptraceClient) do(ctx context.Context, method, endpoint string, body []byte, out any) error {
 	url := u.BaseURL + endpoint
 
 	var reqBody io.Reader
 	if body != nil {
 		reqBody = bytes.NewBuffer(body)
+		tflog.Debug(ctx, "Uptrace request", map[string]any{
+			"method": method,
+			"url":    url,
+			"body":   string(body),
+		})
+	} else {
+		tflog.Debug(ctx, "Uptrace request (no body)", map[string]any{
+			"method": method,
+			"url":    url,
+		})
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, url, reqBody)
@@ -55,6 +67,11 @@ func (u *UptraceClient) do(ctx context.Context, method, endpoint string, body []
 	if err != nil {
 		return fmt.Errorf("reading response: %w", err)
 	}
+
+	tflog.Debug(ctx, "Uptrace response", map[string]any{
+		"status": resp.Status,
+		"body":   string(respBody),
+	})
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("unexpected status %s: %s", resp.Status, respBody)

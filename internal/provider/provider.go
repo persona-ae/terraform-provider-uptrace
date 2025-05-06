@@ -43,9 +43,14 @@ func (p *UptraceProvider) Metadata(ctx context.Context, req provider.MetadataReq
 func (p *UptraceProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"endpoint": schema.StringAttribute{
-				MarkdownDescription: "Example provider attribute",
-				Optional:            true,
+			"token": schema.StringAttribute{
+				MarkdownDescription: "API token for authentication.",
+				Required:            true,
+				Sensitive:           true,
+			},
+			"project_id": schema.StringAttribute{
+				MarkdownDescription: "Uptrace project ID.",
+				Required:            true,
 			},
 		},
 	}

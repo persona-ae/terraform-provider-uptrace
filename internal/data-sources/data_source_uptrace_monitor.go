@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	uptrace "github.com/persona-ae/terraform-provider-uptrace/internal/services"
 )
 
@@ -80,10 +81,17 @@ func (d *monitorDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 	}
 }
 
+type TFMonitorData struct {
+	ID        types.String `tfsdk:"id"`
+	Name      types.String `tfsdk:"name"`
+	ProjectID types.Int64  `tfsdk:"project_id"`
+	Status    types.String `tfsdk:"status"`
+	Type      types.String `tfsdk:"type"`
+	Query     types.String `tfsdk:"query"`
+}
+
 func (d *monitorDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var config struct {
-		ID types.String `tfsdk:"id"`
-	}
+	var config TFMonitorData
 
 	diags := req.Config.Get(ctx, &config)
 	resp.Diagnostics.Append(diags...)
@@ -91,19 +99,22 @@ func (d *monitorDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	monitor, err := d.client.GetMonitorById(ctx, config.ID.ValueString())
+	monitor_resp, err := d.client.GetMonitorById(ctx, config.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", "Unable to read monitor: "+err.Error())
+		tflog.Error(ctx, "Uptrace Client error: "+err.Error())
 		return
 	}
 
-	resp.State.Set(ctx, map[string]any{
-		"id":         strconv.Itoa(monitor.ID),
-		"name":       monitor.Name,
-		"project_id": int64(monitor.ProjectID),
-		"status":     monitor.Status,
-		"type":       monitor.Type,
-		"query":      monitor.Params.Query,
-		// TODO: validate this soon... "metrics":    monitor.Params.Metrics,
-	})
+	monitor := monitor_resp.Monitor
+	state := TFMonitorData{
+		ID:        types.StringValue(strconv.Itoa(monitor.ID)),
+		Name:      types.StringValue(monitor.Name),
+		ProjectID: types.Int64Value(int64(monitor.ProjectID)),
+		Status:    types.StringValue(monitor.Status),
+		Type:      types.StringValue(monitor.Type),
+		Query:     types.StringValue(monitor.Params.Query),
+	}
+	diags = resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(diags...)
 }
