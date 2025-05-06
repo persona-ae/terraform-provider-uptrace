@@ -1,9 +1,5 @@
 package uptrace
 
-// start response models
-
-// get
-
 type GetMonitorsResponse struct {
 	Count    int               `json:"count"`
 	Monitors []MonitorResponse `json:"monitors"`
@@ -17,15 +13,11 @@ type MonitorIdResponse struct {
 	Monitor monitorId `json:"monitor"`
 }
 
-type MonitorRequest struct {
-	monitorBase
-}
-
 type MonitorResponse struct {
-	monitorBase
+	Monitor
 
-	ID             int            `json:"id"`
-	ProjectID      int            `json:"projectId"`
+	ID             int32          `json:"id"`
+	ProjectID      int32          `json:"projectId"`
 	Status         string         `json:"status"`
 	UpdatedAt      float64        `json:"updatedAt"`
 	CheckedAt      int64          `json:"checkedAt"`
@@ -35,9 +27,7 @@ type MonitorResponse struct {
 	RepeatInterval repeatInterval `json:"repeatInterval"`
 }
 
-// start response-model vocabulary
-
-type monitorBase struct {
+type Monitor struct {
 	// Monitor name.
 	Name string `json:"name"`
 	// Must be set to metric.
@@ -45,9 +35,9 @@ type monitorBase struct {
 	// Whether to notify everyone by email.
 	NotifyEveryoneByEmail bool `json:"notifyEveryoneByEmail"`
 	// List of team ids to be notified by email. Overrides notifyEveryoneByEmail.
-	TeamIDs []int `json:"teamIds"`
+	TeamIDs []int32 `json:"teamIds"`
 	// List of channel ids to send notifications.
-	ChannelIDs []int `json:"channelIds"`
+	ChannelIDs []int32 `json:"channelIds"`
 
 	Params Params `json:"params"`
 }
