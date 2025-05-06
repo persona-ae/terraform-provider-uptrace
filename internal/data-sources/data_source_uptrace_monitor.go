@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/persona-ae/terraform-provider-uptrace/internal/models"
 	uptrace "github.com/persona-ae/terraform-provider-uptrace/internal/services"
 )
 
@@ -21,8 +22,8 @@ type monitorDataSource struct {
 	client *uptrace.UptraceClient
 }
 
-func (d *monitorDataSource) Metadata(_ context.Context, _ datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = "uptrace_monitor"
+func (d *monitorDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_monitor"
 }
 
 func (d *monitorDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
@@ -81,17 +82,8 @@ func (d *monitorDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 	}
 }
 
-type TFMonitorData struct {
-	ID        types.String `tfsdk:"id"`
-	Name      types.String `tfsdk:"name"`
-	ProjectID types.Int64  `tfsdk:"project_id"`
-	Status    types.String `tfsdk:"status"`
-	Type      types.String `tfsdk:"type"`
-	Query     types.String `tfsdk:"query"`
-}
-
 func (d *monitorDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var config TFMonitorData
+	var config models.TFMonitorData
 
 	diags := req.Config.Get(ctx, &config)
 	resp.Diagnostics.Append(diags...)
@@ -107,7 +99,7 @@ func (d *monitorDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	}
 
 	monitor := monitor_resp.Monitor
-	state := TFMonitorData{
+	state := models.TFMonitorData{
 		ID:        types.StringValue(strconv.Itoa(monitor.ID)),
 		Name:      types.StringValue(monitor.Name),
 		ProjectID: types.Int64Value(int64(monitor.ProjectID)),
