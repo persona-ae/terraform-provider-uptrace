@@ -2,7 +2,6 @@ package data_sources
 
 import (
 	"context"
-	"encoding/json"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -116,8 +115,6 @@ func (d *monitorDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		Type:      types.StringValue(monitor.Type),
 		Query:     types.StringValue(monitor.Params.Query),
 	}
-	s, _ := json.MarshalIndent(state, "", "  ")
-	tflog.Debug(ctx, "state: "+string(s))
-
-	_ = resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(diags...)
 }
