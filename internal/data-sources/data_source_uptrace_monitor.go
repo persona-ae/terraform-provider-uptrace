@@ -80,10 +80,17 @@ func (d *monitorDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 	}
 }
 
+type TFMonitorData struct {
+	ID        types.String `tfsdk:"id"`
+	Name      types.String `tfsdk:"name"`
+	ProjectID types.Int64  `tfsdk:"project_id"`
+	Status    types.String `tfsdk:"status"`
+	Type      types.String `tfsdk:"type"`
+	Query     types.String `tfsdk:"query"`
+}
+
 func (d *monitorDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var config struct {
-		ID types.String `tfsdk:"id"`
-	}
+	var config TFMonitorData
 
 	diags := req.Config.Get(ctx, &config)
 	resp.Diagnostics.Append(diags...)
@@ -97,13 +104,14 @@ func (d *monitorDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	resp.State.Set(ctx, map[string]any{
-		"id":         strconv.Itoa(monitor.ID),
-		"name":       monitor.Name,
-		"project_id": int64(monitor.ProjectID),
-		"status":     monitor.Status,
-		"type":       monitor.Type,
-		"query":      monitor.Params.Query,
-		// TODO: validate this soon... "metrics":    monitor.Params.Metrics,
-	})
+	state := TFMonitorData{
+		ID:        types.StringValue(strconv.Itoa(monitor.ID)),
+		Name:      types.StringValue(monitor.Name),
+		ProjectID: types.Int64Value(int64(monitor.ProjectID)),
+		Status:    types.StringValue(monitor.Status),
+		Type:      types.StringValue(monitor.Type),
+		Query:     types.StringValue(monitor.Params.Query),
+	}
+
+	_ = resp.State.Set(ctx, &state)
 }
