@@ -81,6 +81,9 @@ func (u *UptraceClient) do(ctx context.Context, method, endpoint string, body []
 	}
 
 	if out != nil {
+		tflog.Debug(ctx, "Unmarshalling into", map[string]any{
+			"type": fmt.Sprintf("%T", out),
+		})
 		if err := json.Unmarshal(respBody, out); err != nil {
 			tflog.Error(ctx, "Error decoding JSON", map[string]any{"error": err})
 			return fmt.Errorf("decoding response JSON: %w", err)

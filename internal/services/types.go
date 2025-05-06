@@ -7,7 +7,9 @@ type GetMonitorsResponse struct {
 	Monitors []Monitor `json:"monitors"`
 }
 
-type GetMonitorByIdResponse Monitor
+type GetMonitorByIdResponse struct {
+	Monitor Monitor `json:"monitor"`
+}
 
 // start response-model vocabulary
 

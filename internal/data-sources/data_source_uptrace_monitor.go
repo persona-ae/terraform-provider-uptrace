@@ -100,13 +100,14 @@ func (d *monitorDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	monitor, err := d.client.GetMonitorById(ctx, config.ID.ValueString())
+	monitor_resp, err := d.client.GetMonitorById(ctx, config.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", "Unable to read monitor: "+err.Error())
 		tflog.Error(ctx, "Uptrace Client error: "+err.Error())
 		return
 	}
 
+	monitor := monitor_resp.Monitor
 	state := TFMonitorData{
 		ID:        types.StringValue(strconv.Itoa(monitor.ID)),
 		Name:      types.StringValue(monitor.Name),
