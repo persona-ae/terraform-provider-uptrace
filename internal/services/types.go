@@ -13,43 +13,27 @@ type GetMonitorByIdResponse struct {
 	Monitor MonitorResponse `json:"monitor"`
 }
 
-// metric monitor
-
-type CreateMonitorRequest struct {
-	monitorRequest
+type MonitorIdResponse struct {
+	Monitor monitorId `json:"monitor"`
 }
 
-type CreateMonitorResponse struct {
-	monitorIdResponse
+type MonitorRequest struct {
+	monitorBase
 }
 
-type UpdateMonitorRequest struct {
-	monitorRequest
+type MonitorResponse struct {
+	monitorBase
+
+	ID             int            `json:"id"`
+	ProjectID      int            `json:"projectId"`
+	Status         string         `json:"status"`
+	UpdatedAt      float64        `json:"updatedAt"`
+	CheckedAt      int64          `json:"checkedAt"`
+	CreatedAt      float64        `json:"createdAt"`
+	Error          string         `json:"error"`
+	NextCheckTime  int64          `json:"nextCheckTime"`
+	RepeatInterval repeatInterval `json:"repeatInterval"`
 }
-
-type UpdateMonitorResponse struct {
-	monitorIdResponse
-}
-
-// error monitor
-
-type CreateErrorMonitorRequest struct {
-	errorMonitorRequest
-}
-
-type CreateErrorMonitorResponse struct {
-	monitorIdResponse
-}
-
-type UpdateErrorMonitorRequest struct {
-	errorMonitorRequest
-}
-
-type UpdateErrorMonitorResponse struct {
-	monitorIdResponse
-}
-
-// end response models
 
 // start response-model vocabulary
 
@@ -64,59 +48,22 @@ type monitorBase struct {
 	TeamIDs []int `json:"teamIds"`
 	// List of channel ids to send notifications.
 	ChannelIDs []int `json:"channelIds"`
+
+	Params Params `json:"params"`
 }
 
-type MonitorResponse struct {
-	monitorBase
-
-	Params         ParamsResponse `json:"params"`
-	ID             int            `json:"id"`
-	ProjectID      int            `json:"projectId"`
-	Status         string         `json:"status"`
-	UpdatedAt      float64        `json:"updatedAt"`
-	CheckedAt      int64          `json:"checkedAt"`
-	CreatedAt      float64        `json:"createdAt"`
-	Error          string         `json:"error"`
-	NextCheckTime  int64          `json:"nextCheckTime"`
-	RepeatInterval RepeatInterval `json:"repeatInterval"`
-}
-
-type monitorRequest struct {
-	monitorBase
-
-	Params ParamsRequest `json:"params"`
-}
-
-type errorMonitorRequest struct {
-	monitorBase
-
-	Params ErrorParamsRequest `json:"params"`
-}
-
-type paramsBase struct {
+type Params struct {
 	Metrics []Metric `json:"metrics"`
 	Query   string   `json:"query"`
-}
 
-type ParamsRequest struct {
-	paramsBase
-
-	Column          string  `json:"column"`
-	MinAllowedValue float32 `json:"minAllowedValue"`
-	MaxAllowedValue float32 `json:"maxAllowedValue"`
-
+	// optional fields below
+	Column           *string  `json:"column"`
+	MinAllowedValue  *float32 `json:"minAllowedValue"`
+	MaxAllowedValue  *float32 `json:"maxAllowedValue"`
 	GroupingInterval *float32 `json:"groupingInterval,omitempty"`
 	CheckNumPoint    *int     `json:"checkNumPoint,omitempty"`
 	NullsMode        *string  `json:"nullsMode,omitempty"`
 	TimeOffset       *float32 `json:"timeOffset,omitempty"`
-}
-
-type ErrorParamsRequest struct {
-	paramsBase
-}
-
-type ParamsResponse struct {
-	paramsBase
 }
 
 type Metric struct {
@@ -124,14 +71,10 @@ type Metric struct {
 	Name  string `json:"name"`
 }
 
-type RepeatInterval struct {
+type repeatInterval struct {
 	Strategy string `json:"strategy"`
 }
 
-type monitorIdResponse struct {
-	Monitor MonitorId `json:"monitor"`
-}
-
-type MonitorId struct {
+type monitorId struct {
 	Id string `json:"id"`
 }
