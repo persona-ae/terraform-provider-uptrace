@@ -106,3 +106,69 @@ func (u *UptraceClient) GetMonitorById(ctx context.Context, id string) (*GetMoni
 
 	return &result, nil
 }
+
+func (u *UptraceClient) CreateMonitor(ctx context.Context, req MonitorRequest) (*MonitorIdResponse, error) {
+	endpoint := fmt.Sprintf("/internal/v1/projects/%s/monitors", u.ProjectID)
+
+	if req.Type != "metric" {
+		return nil, fmt.Errorf("error monitors must be of type \"metric\". You provided: %s", req.Type)
+	}
+
+	var result MonitorIdResponse
+	if err := u.do(ctx, "POST", endpoint, nil, &result); err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (u *UptraceClient) UpdateMonitor(ctx context.Context, id string, req MonitorRequest) (*MonitorIdResponse, error) {
+	endpoint := fmt.Sprintf("/internal/v1/projects/%s/monitors/%s", u.ProjectID, id)
+
+	var result MonitorIdResponse
+	if err := u.do(ctx, "PUT", endpoint, nil, &result); err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (u *UptraceClient) CreateErrorMonitor(ctx context.Context, req MonitorRequest) (*MonitorIdResponse, error) {
+	endpoint := fmt.Sprintf("/internal/v1/projects/%s/monitors", u.ProjectID)
+
+	if req.Type != "error" {
+		return nil, fmt.Errorf("error monitors must be of type \"error\". You provided: %s", req.Type)
+	}
+
+	var result MonitorIdResponse
+	if err := u.do(ctx, "POST", endpoint, nil, &result); err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (u *UptraceClient) UpdateErrorMonitor(ctx context.Context, id string, req MonitorRequest) (*MonitorIdResponse, error) {
+	endpoint := fmt.Sprintf("/internal/v1/projects/%s/monitors/%s", u.ProjectID, id)
+
+	if req.Type != "error" {
+		return nil, fmt.Errorf("error monitors must be of type \"error\". You provided: %s", req.Type)
+	}
+
+	var result MonitorIdResponse
+	if err := u.do(ctx, "PUT", endpoint, nil, &result); err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (u *UptraceClient) DeleteMonitor(ctx context.Context, id string) error {
+	endpoint := fmt.Sprintf("/internal/v1/projects/%s/monitors/%s", u.ProjectID, id)
+
+	var result any
+	if err := u.do(ctx, "DELETE", endpoint, nil, &result); err != nil {
+		return err
+	}
+	return nil
+}
