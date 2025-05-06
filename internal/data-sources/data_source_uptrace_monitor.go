@@ -2,11 +2,13 @@ package data_sources
 
 import (
 	"context"
+	"encoding/json"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	uptrace "github.com/persona-ae/terraform-provider-uptrace/internal/services"
 )
 
@@ -101,6 +103,7 @@ func (d *monitorDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	monitor, err := d.client.GetMonitorById(ctx, config.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", "Unable to read monitor: "+err.Error())
+		tflog.Error(ctx, "Uptrace Client error: "+err.Error())
 		return
 	}
 
@@ -112,6 +115,8 @@ func (d *monitorDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		Type:      types.StringValue(monitor.Type),
 		Query:     types.StringValue(monitor.Params.Query),
 	}
+	s, _ := json.MarshalIndent(state, "", "  ")
+	tflog.Debug(ctx, "state: "+string(s))
 
 	_ = resp.State.Set(ctx, &state)
 }

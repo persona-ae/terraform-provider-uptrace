@@ -6,8 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
+
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 const (
@@ -36,14 +37,21 @@ func (u *UptraceClient) do(ctx context.Context, method, endpoint string, body []
 	var reqBody io.Reader
 	if body != nil {
 		reqBody = bytes.NewBuffer(body)
-		log.Printf("Uptrace request: %s %s\nRequest body: %s", method, url, string(body))
+		tflog.Debug(ctx, "Uptrace request", map[string]any{
+			"method": method,
+			"url":    url,
+			"body":   string(body),
+		})
 	} else {
-		log.Printf("Uptrace request: %s %s", method, url)
+		tflog.Debug(ctx, "Uptrace request (no body)", map[string]any{
+			"method": method,
+			"url":    url,
+		})
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, url, reqBody)
 	if err != nil {
-		log.Printf("Error creating request: %v", err)
+		tflog.Error(ctx, "Error creating request", map[string]any{"error": err})
 		return fmt.Errorf("creating request: %w", err)
 	}
 
@@ -52,18 +60,21 @@ func (u *UptraceClient) do(ctx context.Context, method, endpoint string, body []
 
 	resp, err := u.Client.Do(req)
 	if err != nil {
-		log.Printf("Error performing request: %v", err)
+		tflog.Error(ctx, "Error performing request", map[string]any{"error": err})
 		return fmt.Errorf("performing request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("Error reading response: %v", err)
+		tflog.Error(ctx, "Error reading response", map[string]any{"error": err})
 		return fmt.Errorf("reading response: %w", err)
 	}
 
-	log.Printf("Uptrace response: %s\nResponse body: %s", resp.Status, string(respBody))
+	tflog.Debug(ctx, "Uptrace response", map[string]any{
+		"status": resp.Status,
+		"body":   string(respBody),
+	})
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("unexpected status %s: %s", resp.Status, respBody)
@@ -71,9 +82,12 @@ func (u *UptraceClient) do(ctx context.Context, method, endpoint string, body []
 
 	if out != nil {
 		if err := json.Unmarshal(respBody, out); err != nil {
-			log.Printf("Error decoding JSON: %v", err)
+			tflog.Error(ctx, "Error decoding JSON", map[string]any{"error": err})
 			return fmt.Errorf("decoding response JSON: %w", err)
 		}
+
+		db, _ := json.Marshal(out)
+		tflog.Debug(ctx, "debug out: "+string(db))
 	}
 
 	return nil
