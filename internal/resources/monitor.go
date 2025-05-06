@@ -56,8 +56,30 @@ func (r *monitorResource) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 			},
 			"name": schema.StringAttribute{
-				Computed:    true,
+				Required:    true,
 				Description: "The name of the monitor.",
+			},
+			"type": schema.StringAttribute{
+				Required:    true,
+				Description: "The monitor type.",
+			},
+			"query": schema.StringAttribute{
+				Computed:    true,
+				Description: "The monitor's query.",
+			},
+			"notify_everyone_by_email": schema.BoolAttribute{
+				Optional:    true,
+				Description: "Whether to notify everyone by email.",
+			},
+			"team_ids": schema.SetAttribute{
+				ElementType: types.Int32Type,
+				Optional:    true,
+				Description: "List of team ids to be notified by email. Overrides notifyEveryoneByEmail.",
+			},
+			"channel_ids": schema.SetAttribute{
+				ElementType: types.Int32Type,
+				Optional:    true,
+				Description: "List of channel ids to send notifications.",
 			},
 			"project_id": schema.Int64Attribute{
 				Computed:    true,
@@ -66,28 +88,6 @@ func (r *monitorResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"status": schema.StringAttribute{
 				Computed:    true,
 				Description: "Current status of the monitor.",
-			},
-			"type": schema.StringAttribute{
-				Computed:    true,
-				Description: "The monitor type.",
-			},
-			"query": schema.StringAttribute{
-				Computed:    true,
-				Description: "The monitor's query.",
-			},
-			"notify_everyone_by_email": schema.BoolAttribute{
-				Computed:    true,
-				Description: "Whether to notify everyone by email.",
-			},
-			"team_ids": schema.SetAttribute{
-				ElementType: types.Int32Type,
-				Computed:    true,
-				Description: "List of team ids to be notified by email. Overrides notifyEveryoneByEmail.",
-			},
-			"channel_ids": schema.SetAttribute{
-				ElementType: types.Int32Type,
-				Computed:    true,
-				Description: "List of channel ids to send notifications.",
 			},
 		},
 	}

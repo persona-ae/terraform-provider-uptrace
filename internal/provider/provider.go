@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	data_sources "github.com/persona-ae/terraform-provider-uptrace/internal/data-sources"
+	"github.com/persona-ae/terraform-provider-uptrace/internal/resources"
 	uptrace "github.com/persona-ae/terraform-provider-uptrace/internal/services"
 )
 
@@ -73,7 +74,9 @@ func (p *UptraceProvider) Configure(ctx context.Context, req provider.ConfigureR
 }
 
 func (p *UptraceProvider) Resources(ctx context.Context) []func() resource.Resource {
-	return []func() resource.Resource{}
+	return []func() resource.Resource{
+		resources.NewMonitorResource,
+	}
 }
 
 func (p *UptraceProvider) EphemeralResources(ctx context.Context) []func() ephemeral.EphemeralResource {
