@@ -1,0 +1,13 @@
+.terraform
+.terraform.lock.hcl
+.tfvars
+terraform.tfvars
+terraform.tfstate
+terraform.tfstate.backup
+.env
+
+# Ignore goreleaser artifacts
+dist/*
+
+# Ignore go tools artifacts
+bin/*
