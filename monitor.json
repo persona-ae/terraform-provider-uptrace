@@ -1,0 +1,89 @@
+{
+  "id": 0,
+  "projectId": 0,
+  "name": "Testing Create API (two)",
+  "status": "active",
+  "error": "",
+  "notifyEveryoneByEmail": false,
+  "repeatInterval": {
+    "strategy": "default"
+  },
+  "type": "metric",
+  "params": {
+    "metrics": [
+      {
+        "name": "uptrace_tracing_spans",
+        "alias": "$spans"
+      }
+    ],
+    "query": "count($spans) as spans",
+    "column": "",
+    "columnUnit": "1",
+    "boundsSource": "manual",
+    "groupingInterval": 900000,
+    "checkNumPoint": 10,
+    "nullsMode": "allow",
+    "timeOffset": 0,
+    "minDevValue": 0,
+    "minDevFraction": 0.2,
+    "minAllowedValue": 0,
+    "maxAllowedValue": null,
+    "flapping": {
+      "minAllowedValue": null,
+      "maxAllowedValue": null
+    },
+    "tolerance": "medium",
+    "trainingPeriod": 86400000
+  },
+  "teamIds": [],
+  "channelIds": [],
+  "createdAt": 0,
+  "updatedAt": 0,
+  "checkedAt": 0
+}
+
+{
+  "monitor": {
+    "id": 8649,
+    "projectId": 3255,
+    "name": "Testing Create API (two)",
+    "status": "active",
+    "error": "",
+    "notifyEveryoneByEmail": false,
+    "repeatInterval": {
+      "strategy": "default"
+    },
+    "type": "metric",
+    "createdAt": 1746653647608.225,
+    "updatedAt": 1746653647608.225,
+    "checkedAt": 0,
+    "nextCheckTime": 0,
+    "teamIds": [],
+    "channelIds": [],
+    "params": {
+      "metrics": [
+        {
+          "name": "uptrace_tracing_spans",
+          "alias": "$spans"
+        }
+      ],
+      "query": "count($spans) as spans",
+      "columnUnit": "1",
+      "boundsSource": "manual",
+      "groupingInterval": 900000,
+      "checkNumPoint": 10,
+      "nullsMode": "allow",
+      "timeOffset": 0,
+      "minAllowedValue": 0,
+      "maxAllowedValue": null,
+      "flapping": {
+        "minAllowedValue": null,
+        "maxAllowedValue": null
+      },
+      "tolerance": "medium",
+      "trainingPeriod": 86400000,
+      "minDevFraction": 0.2,
+      "minDevValue": 0
+    }
+  }
+}

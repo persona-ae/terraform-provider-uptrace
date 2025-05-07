@@ -43,7 +43,6 @@ func (u *UptraceClient) do(ctx context.Context, method, endpoint string, in any,
 		reqBody = bytes.NewReader(body)
 
 		fmt.Println(string(body))
-		fmt.Println(string(body))
 
 		//tflog.Debug(ctx, "Uptrace request", map[string]any{
 		fmt.Println("Uptrace request", map[string]any{
@@ -107,7 +106,7 @@ func (u *UptraceClient) GetMonitorById(ctx context.Context, id string, out *GetM
 	return u.do(ctx, "GET", endpoint, nil, out)
 }
 
-func (u *UptraceClient) CreateMonitor(ctx context.Context, req Monitor, out *MonitorIdResponse) error {
+func (u *UptraceClient) CreateMonitor(ctx context.Context, req Monitor, out *Monitor) error {
 	endpoint := fmt.Sprintf("/internal/v1/projects/%s/monitors", u.ProjectID)
 	return u.do(ctx, "POST", endpoint, req, out)
 }

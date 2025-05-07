@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -150,7 +151,7 @@ func (r *monitorResource) Create(ctx context.Context, req resource.CreateRequest
 	tflog.Debug(ctx, "planned query", map[string]any{"query": plan.Query.ValueString()})
 
 	// Generate API request body from plan
-	var monitor uptrace.Monitor
+	monitor := uptrace.MakeMonitorWithDefaults()
 	diags = utils.TFMonitorToUptraceMonitor(ctx, plan, &monitor)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -160,7 +161,7 @@ func (r *monitorResource) Create(ctx context.Context, req resource.CreateRequest
 	tflog.Debug(ctx, "creating monitor", map[string]any{"monitor": monitor, "query": monitor.Params.Query})
 
 	// Create new monitor
-	response := uptrace.MonitorIdResponse{}
+	response := uptrace.Monitor{}
 	err := r.client.CreateMonitor(ctx, monitor, &response)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -173,7 +174,8 @@ func (r *monitorResource) Create(ctx context.Context, req resource.CreateRequest
 	// log the response
 	tflog.Info(ctx, "CreateMonitor OK: %s", map[string]any{"response": response})
 
-	plan.ID = types.StringValue(response.Monitor.Id)
+	idStr := strconv.Itoa(int(response.ID))
+	plan.ID = types.StringValue(idStr)
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &plan)
@@ -230,7 +232,7 @@ func (r *monitorResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	id := plan.ID.ValueString()
 
-	var monitor uptrace.Monitor
+	monitor := uptrace.MakeMonitorWithDefaults()
 	diags := utils.TFMonitorToUptraceMonitor(ctx, plan, &monitor)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

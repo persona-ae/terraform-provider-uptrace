@@ -57,24 +57,15 @@ func main() {
 
 	fmt.Println("Creating monitor...")
 
-	monitor := uptrace.Monitor{
-		Name: "tts_p90",
-		Type: "metric",
-		Params: uptrace.Params{
-			Metrics: []uptrace.Metric{
-				{
-					Name:  "uptrace_tracing_spans",
-					Alias: "$spans",
-				},
-			},
-			Query:           "p90($spans) as p90 | where _name = 'stt:finalize'",
-			Column:          "",
-			MinAllowedValue: 0,
-			MaxAllowedValue: 10000,
-		},
+	monitor := uptrace.MakeMonitorWithDefaults()
+	monitor.Name = "Testing Create API from Go"
+	monitor.Type = "metric"
+	monitor.Params.Metrics = []uptrace.Metric{
+		{Name: "uptrace_tracing_spans", Alias: "$spans"},
 	}
+	monitor.Params.Query = "count($spans) as spans"
 
-	var response uptrace.MonitorIdResponse
+	var response uptrace.Monitor
 	err = c.CreateMonitor(context.Background(), monitor, &response)
 	if err != nil {
 		panic(err.Error())
