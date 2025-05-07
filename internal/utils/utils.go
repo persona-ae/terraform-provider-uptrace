@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -27,19 +28,29 @@ func TFMonitorToUptraceMonitor(ctx context.Context, plan models.TFMonitorData, o
 		out.Type = plan.Type.ValueString()
 	}
 	if !plan.NotifyEveryoneByEmail.IsUnknown() {
-		out.NotifyEveryoneByEmail = plan.NotifyEveryoneByEmail.ValueBool()
+		out.NotifyEveryoneByEmail = plan.NotifyEveryoneByEmail.ValueBoolPointer()
 	}
 	if !plan.TeamIDs.IsUnknown() {
-		out.TeamIDs = teamIds
+		out.TeamIDs = &teamIds
 	}
 	if !plan.ChannelIDs.IsUnknown() {
-		out.ChannelIDs = channelIds
+		out.ChannelIDs = &channelIds
 	}
 
 	out.Params = uptrace.Params{}
 	if !plan.Query.IsUnknown() {
 		out.Params.Query = plan.Query.ValueString()
 	}
+	if !plan.Column.IsUnknown() {
+		out.Params.Column = plan.Column.ValueString()
+	}
+	if !plan.MinAllowedValue.IsUnknown() {
+		out.Params.MinAllowedValue = plan.MinAllowedValue.ValueFloat32()
+	}
+	if !plan.MaxAllowedValue.IsUnknown() {
+		out.Params.MaxAllowedValue = plan.MaxAllowedValue.ValueFloat32()
+	}
+
 	if !plan.Metrics.IsUnknown() && !plan.Metrics.IsNull() {
 		metrics := []uptrace.Metric{}
 		metricsList := plan.Metrics.Elements()
@@ -69,15 +80,16 @@ func TFMonitorToUptraceMonitor(ctx context.Context, plan models.TFMonitorData, o
 }
 
 func OverlayMonitorOnTFMonitorData(ctx context.Context, monitor uptrace.MonitorResponse, data *models.TFMonitorData) diag.Diagnostics {
-	data.ID = types.Int32Value(monitor.ID)
+	var diags diag.Diagnostics
+
+	idStr := strconv.Itoa(int(monitor.ID))
+	data.ID = types.StringValue(idStr)
 	data.Name = types.StringValue(monitor.Name)
 	data.ProjectID = types.Int32Value(monitor.ProjectID)
 	data.Status = types.StringValue(monitor.Status)
 	data.Type = types.StringValue(monitor.Type)
-	data.Query = types.StringValue(monitor.Params.Query)
-	data.NotifyEveryoneByEmail = types.BoolValue(monitor.NotifyEveryoneByEmail)
+	data.NotifyEveryoneByEmail = types.BoolPointerValue(monitor.NotifyEveryoneByEmail)
 
-	var diags diag.Diagnostics
 	data.TeamIDs, diags = Int32SliceToSet(monitor.TeamIDs)
 	if diags.HasError() {
 		return diags
@@ -86,6 +98,11 @@ func OverlayMonitorOnTFMonitorData(ctx context.Context, monitor uptrace.MonitorR
 	if diags.HasError() {
 		return diags
 	}
+
+	data.Query = types.StringValue(monitor.Params.Query)
+	data.Column = types.StringValue(monitor.Params.Column)
+	data.MinAllowedValue = types.Float32Value(monitor.Params.MinAllowedValue)
+	data.MaxAllowedValue = types.Float32Value(monitor.Params.MaxAllowedValue)
 
 	metrics := make([]attr.Value, 0, len(monitor.Params.Metrics))
 	for _, m := range monitor.Params.Metrics {
@@ -133,7 +150,12 @@ func convertElementsToInts(tfInts []types.Int32) ([]int32, diag.Diagnostics) {
 	return ints, nil
 }
 
-func Int32SliceToSet(ints []int32) (types.Set, diag.Diagnostics) {
+func Int32SliceToSet(ip *[]int32) (types.Set, diag.Diagnostics) {
+	if ip == nil {
+		return types.SetValue(types.Int32Type, []attr.Value{})
+	}
+
+	ints := *ip
 	values := make([]attr.Value, len(ints))
 	for i, v := range ints {
 		values[i] = types.Int32Value(v)

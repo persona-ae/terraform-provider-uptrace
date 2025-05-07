@@ -31,25 +31,25 @@ type Monitor struct {
 	// Monitor name.
 	Name string `json:"name"`
 	// Must be set to metric.
-	Type string `json:"type"`
-	// Whether to notify everyone by email.
-	NotifyEveryoneByEmail bool `json:"notifyEveryoneByEmail"`
-	// List of team ids to be notified by email. Overrides notifyEveryoneByEmail.
-	TeamIDs []int32 `json:"teamIds"`
-	// List of channel ids to send notifications.
-	ChannelIDs []int32 `json:"channelIds"`
-
+	Type   string `json:"type"`
 	Params Params `json:"params"`
+
+	// Whether to notify everyone by email.
+	NotifyEveryoneByEmail *bool `json:"notifyEveryoneByEmail,omitempty"`
+	// List of team ids to be notified by email. Overrides notifyEveryoneByEmail.
+	TeamIDs *[]int32 `json:"teamIds,omitempty"`
+	// List of channel ids to send notifications.
+	ChannelIDs *[]int32 `json:"channelIds,omitempty"`
 }
 
 type Params struct {
-	Metrics []Metric `json:"metrics"`
-	Query   string   `json:"query"`
+	Metrics         []Metric `json:"metrics"`
+	Query           string   `json:"query"`
+	Column          string   `json:"column"`
+	MinAllowedValue float32  `json:"minAllowedValue"`
+	MaxAllowedValue float32  `json:"maxAllowedValue"`
 
 	// optional fields below
-	Column           *string  `json:"column"`
-	MinAllowedValue  *float32 `json:"minAllowedValue"`
-	MaxAllowedValue  *float32 `json:"maxAllowedValue"`
 	GroupingInterval *float32 `json:"groupingInterval,omitempty"`
 	CheckNumPoint    *int     `json:"checkNumPoint,omitempty"`
 	NullsMode        *string  `json:"nullsMode,omitempty"`

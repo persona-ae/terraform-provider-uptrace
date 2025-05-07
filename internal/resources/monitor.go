@@ -3,7 +3,6 @@ package resources
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -78,6 +77,18 @@ func (r *monitorResource) Schema(ctx context.Context, req resource.SchemaRequest
 					},
 				},
 			},
+			"column": schema.StringAttribute{
+				Required:    true,
+				Description: "TODO",
+			},
+			"min_allowed_value": schema.Float32Attribute{
+				Required:    true,
+				Description: "TODO",
+			},
+			"max_allowed_value": schema.Float32Attribute{
+				Required:    true,
+				Description: "TODO",
+			},
 			"notify_everyone_by_email": schema.BoolAttribute{
 				Optional:    true,
 				Description: "Whether to notify everyone by email.",
@@ -92,7 +103,7 @@ func (r *monitorResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Optional:    true,
 				Description: "List of channel ids to send notifications.",
 			},
-			"project_id": schema.Int64Attribute{
+			"project_id": schema.Int32Attribute{
 				Computed:    true,
 				Description: "Project ID the monitor belongs to.",
 			},
@@ -136,6 +147,8 @@ func (r *monitorResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
+	tflog.Debug(ctx, "planned query", map[string]any{"query": plan.Query.ValueString()})
+
 	// Generate API request body from plan
 	var monitor uptrace.Monitor
 	diags = utils.TFMonitorToUptraceMonitor(ctx, plan, &monitor)
@@ -143,6 +156,8 @@ func (r *monitorResource) Create(ctx context.Context, req resource.CreateRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	tflog.Debug(ctx, "creating monitor", map[string]any{"monitor": monitor, "query": monitor.Params.Query})
 
 	// Create new monitor
 	response := uptrace.MonitorIdResponse{}
@@ -158,15 +173,7 @@ func (r *monitorResource) Create(ctx context.Context, req resource.CreateRequest
 	// log the response
 	tflog.Info(ctx, "CreateMonitor OK: %s", map[string]any{"response": response})
 
-	id, err := strconv.Atoi(response.Monitor.Id)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Uptrace responded with an invalid monitor id",
-			fmt.Sprintf("Uptrace responded with an invalid monitor id: %s", err),
-		)
-		return
-	}
-	plan.ID = types.Int32Value(int32(id))
+	plan.ID = types.StringValue(response.Monitor.Id)
 
 	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &plan)
@@ -188,7 +195,7 @@ func (r *monitorResource) Read(ctx context.Context, req resource.ReadRequest, re
 	// Get fresh state from uptrace
 	// Generate API request body from plan
 	var response uptrace.GetMonitorByIdResponse
-	err := r.client.GetMonitorById(ctx, state.ID.ValueInt32(), &response)
+	err := r.client.GetMonitorById(ctx, state.ID.ValueString(), &response)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to get monitor",
@@ -221,7 +228,7 @@ func (r *monitorResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	id := plan.ID.ValueInt32()
+	id := plan.ID.ValueString()
 
 	var monitor uptrace.Monitor
 	diags := utils.TFMonitorToUptraceMonitor(ctx, plan, &monitor)
@@ -259,7 +266,7 @@ func (r *monitorResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	id := state.ID.ValueInt32()
+	id := state.ID.ValueString()
 	err := r.client.DeleteMonitor(ctx, id)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -280,7 +287,7 @@ func (r *monitorResource) ImportState(ctx context.Context, req resource.ImportSt
 	// Get fresh state from Uptrace
 	id := req.ID
 	var response uptrace.GetMonitorByIdResponse
-	err := r.client.GetMonitorByIdStr(ctx, id, &response)
+	err := r.client.GetMonitorById(ctx, id, &response)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to get monitor",
