@@ -37,12 +37,38 @@ func TFMonitorToUptraceMonitor(ctx context.Context, plan models.TFMonitorData, o
 	}
 
 	out.Params = uptrace.Params{}
+	if !plan.Query.IsUnknown() {
+		out.Params.Query = plan.Query.ValueString()
+	}
+	if !plan.Metrics.IsUnknown() && !plan.Metrics.IsNull() {
+		metrics := []uptrace.Metric{}
+		metricsList := plan.Metrics.Elements()
+
+		for _, m := range metricsList {
+			objVal := m.(types.Object)
+
+			var name string
+			var alias string
+
+			if nameAttr, ok := objVal.Attributes()["name"]; ok && !nameAttr.IsNull() {
+				name = nameAttr.(types.String).ValueString()
+			}
+			if aliasAttr, ok := objVal.Attributes()["alias"]; ok && !aliasAttr.IsNull() {
+				alias = aliasAttr.(types.String).ValueString()
+			}
+
+			metrics = append(metrics, uptrace.Metric{
+				Name:  name,
+				Alias: alias,
+			})
+		}
+		out.Params.Metrics = metrics
+	}
 
 	return nil
 }
 
 func OverlayMonitorOnTFMonitorData(ctx context.Context, monitor uptrace.MonitorResponse, data *models.TFMonitorData) diag.Diagnostics {
-	// first the required types
 	data.ID = types.Int32Value(monitor.ID)
 	data.Name = types.StringValue(monitor.Name)
 	data.ProjectID = types.Int32Value(monitor.ProjectID)
@@ -60,6 +86,28 @@ func OverlayMonitorOnTFMonitorData(ctx context.Context, monitor uptrace.MonitorR
 	if diags.HasError() {
 		return diags
 	}
+
+	metrics := make([]attr.Value, 0, len(monitor.Params.Metrics))
+	for _, m := range monitor.Params.Metrics {
+		obj, diags := types.ObjectValue(map[string]attr.Type{
+			"name":  types.StringType,
+			"alias": types.StringType,
+		}, map[string]attr.Value{
+			"name":  types.StringValue(m.Name),
+			"alias": types.StringValue(m.Alias),
+		})
+		if diags.HasError() {
+			return diags
+		}
+		metrics = append(metrics, obj)
+	}
+
+	data.Metrics, _ = types.ListValue(types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"name":  types.StringType,
+			"alias": types.StringType,
+		},
+	}, metrics)
 
 	return nil
 }

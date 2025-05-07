@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -64,8 +65,18 @@ func (r *monitorResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Description: "The monitor type.",
 			},
 			"query": schema.StringAttribute{
-				Computed:    true,
+				Required:    true,
 				Description: "The monitor's query.",
+			},
+			"metrics": schema.ListAttribute{
+				Required:    true,
+				Description: "List of metrics to monitor.",
+				ElementType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"name":  types.StringType,
+						"alias": types.StringType,
+					},
+				},
 			},
 			"notify_everyone_by_email": schema.BoolAttribute{
 				Optional:    true,

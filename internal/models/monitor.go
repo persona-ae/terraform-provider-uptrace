@@ -10,6 +10,7 @@ type TFMonitorData struct {
 	Status                types.String `tfsdk:"status"`
 	Type                  types.String `tfsdk:"type"`
 	Query                 types.String `tfsdk:"query"`
+	Metrics               types.List   `tfsdk:"metrics"`
 	NotifyEveryoneByEmail types.Bool   `tfsdk:"notify_everyone_by_email"`
 	TeamIDs               types.Set    `tfsdk:"team_ids"`
 	ChannelIDs            types.Set    `tfsdk:"channel_ids"`
