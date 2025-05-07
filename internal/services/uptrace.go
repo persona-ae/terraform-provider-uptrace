@@ -18,15 +18,15 @@ const (
 type UptraceClient struct {
 	BaseURL   string
 	ProjectID string
-	Token     string
+	APIKey    string
 	Client    *http.Client
 }
 
-func NewUptraceClient(projectID, token string) *UptraceClient {
+func NewUptraceClient(projectID, apiKey string) *UptraceClient {
 	return &UptraceClient{
 		BaseURL:   BaseURL,
 		ProjectID: projectID,
-		Token:     token,
+		APIKey:    apiKey,
 		Client:    &http.Client{},
 	}
 }
@@ -54,7 +54,7 @@ func (u *UptraceClient) do(ctx context.Context, method, endpoint string, body []
 		return fmt.Errorf("creating request: %w", err)
 	}
 
-	req.Header.Set("Authorization", "Bearer "+u.Token)
+	req.Header.Set("Authorization", "Bearer "+u.APIKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := u.Client.Do(req)
