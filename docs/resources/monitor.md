@@ -24,6 +24,7 @@ Manages a monitor.
 
 ### Optional
 
+- `bounds_source` (String) Bounds trigger source (manual or auto).
 - `channel_ids` (List of Number) List of channel ids to send notifications.
 - `check_num_point` (Number) Number of points to check. The default is 5.
 - `column_unit` (String) The unit of the metric in the selected column
@@ -55,7 +56,6 @@ Use smaller training periods for volatile values such as CPU usage.
 
 ### Read-Only
 
-- `bounds_source` (String) Bounds trigger source (manual or auto).
 - `column` (String) Column name to monitor, eg. spans.
 - `id` (String) Service generated identifier.
 - `project_id` (Number) The ID of the project this monitor is associated with.
