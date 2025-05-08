@@ -3,12 +3,12 @@
 page_title: "uptrace_monitor Resource - terraform-provider-uptrace"
 subcategory: ""
 description: |-
-  Manages an monitor.
+  Manages a monitor.
 ---
 
 # uptrace_monitor (Resource)
 
-Manages an monitor.
+Manages a monitor.
 
 
 

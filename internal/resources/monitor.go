@@ -46,7 +46,7 @@ func (r *monitorResource) Schema(ctx context.Context, req resource.SchemaRequest
 	tflog.Debug(ctx, "monitorResource.Schema", map[string]any{"req": req, "resp": resp})
 
 	resp.Schema = schema.Schema{
-		Description: "Manages an monitor.",
+		Description: "Manages a monitor.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
