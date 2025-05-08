@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	data_sources "github.com/persona-ae/terraform-provider-uptrace/internal/data-sources"
 	"github.com/persona-ae/terraform-provider-uptrace/internal/resources"
 	uptrace "github.com/persona-ae/terraform-provider-uptrace/internal/services"
 )
@@ -39,8 +38,8 @@ func (p *UptraceProvider) Metadata(ctx context.Context, req provider.MetadataReq
 func (p *UptraceProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"token": schema.StringAttribute{
-				MarkdownDescription: "API token for authentication.",
+			"api_key": schema.StringAttribute{
+				MarkdownDescription: "API key for authentication.",
 				Required:            true,
 				Sensitive:           true,
 			},
@@ -54,7 +53,7 @@ func (p *UptraceProvider) Schema(ctx context.Context, req provider.SchemaRequest
 
 func (p *UptraceProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	var config struct {
-		Token     types.String `tfsdk:"token"`
+		APIKey    types.String `tfsdk:"api_key"`
 		ProjectID types.String `tfsdk:"project_id"`
 	}
 
@@ -66,7 +65,7 @@ func (p *UptraceProvider) Configure(ctx context.Context, req provider.ConfigureR
 
 	client := uptrace.NewUptraceClient(
 		config.ProjectID.ValueString(),
-		config.Token.ValueString(),
+		config.APIKey.ValueString(),
 	)
 
 	resp.DataSourceData = client
@@ -84,9 +83,7 @@ func (p *UptraceProvider) EphemeralResources(ctx context.Context) []func() ephem
 }
 
 func (p *UptraceProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{
-		data_sources.NewMonitorDataSource,
-	}
+	return []func() datasource.DataSource{}
 }
 
 func (p *UptraceProvider) Functions(ctx context.Context) []func() function.Function {

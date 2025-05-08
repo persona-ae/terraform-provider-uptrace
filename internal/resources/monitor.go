@@ -3,8 +3,8 @@ package resources
 import (
 	"context"
 	"fmt"
-	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -64,30 +64,123 @@ func (r *monitorResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Description: "The monitor type.",
 			},
 			"query": schema.StringAttribute{
-				Computed:    true,
+				Required:    true,
 				Description: "The monitor's query.",
 			},
-			"notify_everyone_by_email": schema.BoolAttribute{
-				Optional:    true,
-				Description: "Whether to notify everyone by email.",
+			"metrics": schema.ListAttribute{
+				Required:    true,
+				Description: "List of metrics to monitor.",
+				ElementType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"name":  types.StringType,
+						"alias": types.StringType,
+					},
+				},
 			},
-			"team_ids": schema.SetAttribute{
-				ElementType: types.Int32Type,
-				Optional:    true,
-				Description: "List of team ids to be notified by email. Overrides notifyEveryoneByEmail.",
-			},
-			"channel_ids": schema.SetAttribute{
-				ElementType: types.Int32Type,
-				Optional:    true,
-				Description: "List of channel ids to send notifications.",
-			},
-			"project_id": schema.Int64Attribute{
+			// begin optionals
+			"repeat_interval": schema.StringAttribute{
 				Computed:    true,
-				Description: "Project ID the monitor belongs to.",
+				Optional:    true,
+				Description: "TODO",
 			},
+			"column_unit": schema.StringAttribute{
+				Computed:    true,
+				Optional:    true,
+				Description: "TODO",
+			},
+			"nulls_mode": schema.StringAttribute{
+				Computed:    true,
+				Optional:    true,
+				Description: "TODO",
+			},
+			"tolerance": schema.StringAttribute{
+				Computed:    true,
+				Optional:    true,
+				Description: "TODO",
+			},
+			"notify_everyone_by_email": schema.BoolAttribute{
+				Computed:    true,
+				Optional:    true,
+				Description: "TODO",
+			},
+			"min_dev_value": schema.Float64Attribute{
+				Computed:    true,
+				Optional:    true,
+				Description: "TODO",
+			},
+			"min_dev_fraction": schema.Float64Attribute{
+				Computed:    true,
+				Optional:    true,
+				Description: "TODO",
+			},
+			"min_allowed_value": schema.Float64Attribute{
+				Computed:    true,
+				Optional:    true,
+				Description: "TODO",
+			},
+			"max_allowed_value": schema.Float64Attribute{
+				Computed:    true,
+				Optional:    true,
+				Description: "TODO",
+			},
+			"min_allowed_flapping_value": schema.Float64Attribute{
+				Computed:    true,
+				Optional:    true,
+				Description: "TODO",
+			},
+			"max_allowed_flapping_value": schema.Float64Attribute{
+				Computed:    true,
+				Optional:    true,
+				Description: "TODO",
+			},
+			"training_period": schema.Int32Attribute{
+				Computed:    true,
+				Optional:    true,
+				Description: "TODO",
+			},
+			"time_offset": schema.Int32Attribute{
+				Computed:    true,
+				Optional:    true,
+				Description: "TODO",
+			},
+			"grouping_interval": schema.Int32Attribute{
+				Computed:    true,
+				Optional:    true,
+				Description: "TODO",
+			},
+			"check_num_point": schema.Int32Attribute{
+				Computed:    true,
+				Optional:    true,
+				Description: "TODO",
+			},
+			"team_ids": schema.ListAttribute{
+				ElementType: types.Int32Type,
+				Computed:    true,
+				Optional:    true,
+				Description: "TODO",
+			},
+			"channel_ids": schema.ListAttribute{
+				ElementType: types.Int32Type,
+				Computed:    true,
+				Optional:    true,
+				Description: "TODO",
+			},
+			// begin computed
 			"status": schema.StringAttribute{
 				Computed:    true,
-				Description: "Current status of the monitor.",
+				Description: "TODO",
+			},
+			"column": schema.StringAttribute{
+				Computed:    true,
+				Description: "TODO",
+			},
+			"project_id": schema.Int32Attribute{
+				Computed:    true,
+				Description: "TODO",
+			},
+			"bounds_source": schema.StringAttribute{
+				Computed:    true,
+				Description: "TODO",
 			},
 		},
 	}
@@ -125,16 +218,20 @@ func (r *monitorResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
+	tflog.Debug(ctx, "planned query", map[string]any{"query": plan.Query.ValueString()})
+
 	// Generate API request body from plan
-	var monitor uptrace.Monitor
+	monitor := uptrace.MakeMonitorWithDefaults()
 	diags = utils.TFMonitorToUptraceMonitor(ctx, plan, &monitor)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	tflog.Debug(ctx, "creating monitor", map[string]any{"monitor": monitor, "query": monitor.Params.Query})
+
 	// Create new monitor
-	response := uptrace.MonitorIdResponse{}
+	var response uptrace.MonitorResponse
 	err := r.client.CreateMonitor(ctx, monitor, &response)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -147,17 +244,13 @@ func (r *monitorResource) Create(ctx context.Context, req resource.CreateRequest
 	// log the response
 	tflog.Info(ctx, "CreateMonitor OK: %s", map[string]any{"response": response})
 
-	id, err := strconv.Atoi(response.Monitor.Id)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Uptrace responded with an invalid monitor id",
-			fmt.Sprintf("Uptrace responded with an invalid monitor id: %s", err),
-		)
+	// Save data into Terraform state
+	diags = utils.OverlayMonitorOnTFMonitorData(ctx, response.Monitor, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
-	plan.ID = types.Int32Value(int32(id))
 
-	// Save data into Terraform state
 	diags = resp.State.Set(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 }
@@ -176,8 +269,8 @@ func (r *monitorResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	// Get fresh state from uptrace
 	// Generate API request body from plan
-	var response uptrace.GetMonitorByIdResponse
-	err := r.client.GetMonitorById(ctx, state.ID.ValueInt32(), &response)
+	var response uptrace.MonitorResponse
+	err := r.client.GetMonitorById(ctx, state.ID.ValueString(), &response)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to get monitor",
@@ -210,16 +303,16 @@ func (r *monitorResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	id := plan.ID.ValueInt32()
+	id := plan.ID.ValueString()
 
-	var monitor uptrace.Monitor
+	monitor := uptrace.MakeMonitorWithDefaults()
 	diags := utils.TFMonitorToUptraceMonitor(ctx, plan, &monitor)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var response uptrace.MonitorIdResponse
+	var response uptrace.MonitorResponse
 	err := r.client.UpdateMonitor(ctx, id, monitor, &response)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -232,8 +325,15 @@ func (r *monitorResource) Update(ctx context.Context, req resource.UpdateRequest
 	// log the response
 	tflog.Info(ctx, "UpdateMonitor OK", map[string]any{"response": response})
 
+	diags = utils.OverlayMonitorOnTFMonitorData(ctx, response.Monitor, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	diags = resp.State.Set(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
 }
 
 // Delete resource information.
@@ -248,7 +348,7 @@ func (r *monitorResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	id := state.ID.ValueInt32()
+	id := state.ID.ValueString()
 	err := r.client.DeleteMonitor(ctx, id)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -268,8 +368,8 @@ func (r *monitorResource) ImportState(ctx context.Context, req resource.ImportSt
 
 	// Get fresh state from Uptrace
 	id := req.ID
-	var response uptrace.GetMonitorByIdResponse
-	err := r.client.GetMonitorByIdStr(ctx, id, &response)
+	var response uptrace.MonitorResponse
+	err := r.client.GetMonitorById(ctx, id, &response)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to get monitor",
