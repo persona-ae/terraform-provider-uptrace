@@ -17,38 +17,49 @@ Manages an monitor.
 
 ### Required
 
-- `metrics` (List of Object) List of metrics to monitor. (see [below for nested schema](#nestedatt--metrics))
+- `metrics` (List of Object) List of metrics to monitor eg. [{"name": "uptrace_tracing_spans", "alias": "spans"}]. (see [below for nested schema](#nestedatt--metrics))
 - `name` (String) The name of the monitor.
-- `query` (String) The monitor's query.
-- `type` (String) The monitor type.
+- `query` (String) The monitor's query eg. "perMin(sum($spans)) as spans".
+- `type` (String) The monitor type ('metric' or 'error').
 
 ### Optional
 
-- `channel_ids` (List of Number) TODO
-- `check_num_point` (Number) TODO
-- `column_unit` (String) TODO
-- `grouping_interval` (Number) TODO
-- `max_allowed_flapping_value` (Number) TODO
-- `max_allowed_value` (Number) TODO
-- `min_allowed_flapping_value` (Number) TODO
-- `min_allowed_value` (Number) TODO
-- `min_dev_fraction` (Number) TODO
-- `min_dev_value` (Number) TODO
-- `notify_everyone_by_email` (Boolean) TODO
-- `nulls_mode` (String) TODO
-- `repeat_interval` (String) TODO
-- `team_ids` (List of Number) TODO
-- `time_offset` (Number) TODO
-- `tolerance` (String) TODO
-- `training_period` (Number) TODO
+- `channel_ids` (List of Number) List of channel ids to send notifications.
+- `check_num_point` (Number) Number of points to check. The default is 5.
+- `column_unit` (String) The unit of the metric in the selected column
+- `grouping_interval` (Number) Grouping interval in milliseconds. The default 60000 (1 minute).
+- `max_allowed_flapping_value` (Number) Max allowed number (trigger value: 500)
+Flapping occures when the monitor triggers the same alert for a short period of time because the monitored value changes back and forth around the trigger point. To reduce the noise, you can configure additional conditions required to close the alert.
+For example, the filesystem utilization monitor may fluctuate from 0.89 to 0.9, causing the alert status to change constantly. By configuring the maximum allowed value to 0.85, the alert won't be closed until the value changes from 0.9 to 0.85.
+- `max_allowed_value` (Number) Inclusive. Values greater than this are reported (At least min_allowed_value or max_allowed_value is required).
+- `min_allowed_flapping_value` (Number) Min allowed number
+Flapping occures when the monitor triggers the same alert for a short period of time because the monitored value changes back and forth around the trigger point. To reduce the noise, you can configure additional conditions required to close the alert.
+For example, the filesystem utilization monitor may fluctuate from 0.89 to 0.9, causing the alert status to change constantly. By configuring the maximum allowed value to 0.85, the alert won't be closed until the value changes from 0.9 to 0.85.
+- `min_allowed_value` (Number) Inclusive. Values lower than this are reported (At least min_allowed_value or max_allowed_value is required).
+- `min_dev_fraction` (Number) Min deviation fraction
+- `min_dev_value` (Number) Min deviation value
+- `notify_everyone_by_email` (Boolean) Whether to notify everyone by email.
+- `nulls_mode` (String) Nulls handling mode: allow, forbid, convert. The default is allow.
+- `repeat_interval` (String) Notification repeat interval
+By default, Uptrace uses adaptive interval to wait before sending a notification again.
+
+The interval starts from 15 minutes and doubles every 3 notifications, e.g. 15m, 15m, 15m, 30m, 30m, 30m, 1h...
+
+The max interval is 24 hours.
+- `team_ids` (List of Number) List of team ids to be notified by email. Overrides notifyEveryoneByEmail.
+- `time_offset` (Number) Time offset in milliseconds, e.g. 60000 delays check by 1 minute.
+- `tolerance` (String) The tolerance of the automaticly triggered monitor (low, medium, or high).
+To reduce the number of alers, pick higher tolerance.
+- `training_period` (Number) Training period
+Use smaller training periods for volatile values such as CPU usage.
 
 ### Read-Only
 
-- `bounds_source` (String) TODO
-- `column` (String) TODO
+- `bounds_source` (String) Bounds trigger source (manual or auto).
+- `column` (String) Column name to monitor, eg. spans.
 - `id` (String) Service generated identifier.
-- `project_id` (Number) TODO
-- `status` (String) TODO
+- `project_id` (Number) The ID of the project this monitor is associated with.
+- `status` (String) The current status of the monitor.
 
 <a id="nestedatt--metrics"></a>
 ### Nested Schema for `metrics`
