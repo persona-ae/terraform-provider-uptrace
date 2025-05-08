@@ -186,22 +186,23 @@ Use smaller training periods for volatile values such as CPU usage.
 				Optional:    true,
 				Description: "List of channel ids to send notifications.",
 			},
+			"bounds_source": schema.StringAttribute{
+				Computed:    true,
+				Optional:    true,
+				Description: "Bounds trigger source (manual or auto).",
+			},
 			// begin computed
 			"status": schema.StringAttribute{
 				Computed:    true,
 				Description: "The current status of the monitor.",
 			},
-			"column": schema.StringAttribute{
-				Computed:    true,
-				Description: "Column name to monitor, eg. spans.",
-			},
 			"project_id": schema.Int32Attribute{
 				Computed:    true,
 				Description: "The ID of the project this monitor is associated with.",
 			},
-			"bounds_source": schema.StringAttribute{
+			"column": schema.StringAttribute{
 				Computed:    true,
-				Description: "Bounds trigger source (manual or auto).",
+				Description: "Column name to monitor, eg. spans.",
 			},
 		},
 	}
