@@ -325,8 +325,7 @@ func (r *monitorResource) Update(ctx context.Context, req resource.UpdateRequest
 	// log the response
 	tflog.Info(ctx, "UpdateMonitor OK", map[string]any{"response": response})
 
-	var state models.TFMonitorData
-	diags = utils.OverlayMonitorOnTFMonitorData(ctx, response.Monitor, &state)
+	diags = utils.OverlayMonitorOnTFMonitorData(ctx, response.Monitor, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

@@ -118,7 +118,5 @@ func (u *UptraceClient) UpdateMonitor(ctx context.Context, id string, req Monito
 
 func (u *UptraceClient) DeleteMonitor(ctx context.Context, id string) error {
 	endpoint := fmt.Sprintf("/internal/v1/projects/%s/monitors/%s", u.ProjectID, id)
-
-	var result any
-	return u.do(ctx, "DELETE", endpoint, nil, &result)
+	return u.do(ctx, "DELETE", endpoint, nil, nil)
 }
