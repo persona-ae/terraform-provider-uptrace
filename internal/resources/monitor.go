@@ -46,7 +46,7 @@ func (r *monitorResource) Schema(ctx context.Context, req resource.SchemaRequest
 	tflog.Debug(ctx, "monitorResource.Schema", map[string]any{"req": req, "resp": resp})
 
 	resp.Schema = schema.Schema{
-		Description: "Manages an monitor.",
+		Description: "Manages a monitor.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
@@ -61,15 +61,15 @@ func (r *monitorResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"type": schema.StringAttribute{
 				Required:    true,
-				Description: "The monitor type.",
+				Description: "The monitor type ('metric' or 'error').",
 			},
 			"query": schema.StringAttribute{
 				Required:    true,
-				Description: "The monitor's query.",
+				Description: "The monitor's query eg. \"perMin(sum($spans)) as spans\".",
 			},
 			"metrics": schema.ListAttribute{
 				Required:    true,
-				Description: "List of metrics to monitor.",
+				Description: "List of metrics to monitor eg. [{\"name\": \"uptrace_tracing_spans\", \"alias\": \"spans\"}].",
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
 						"name":  types.StringType,
@@ -81,106 +81,128 @@ func (r *monitorResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"repeat_interval": schema.StringAttribute{
 				Computed:    true,
 				Optional:    true,
-				Description: "TODO",
+				Description: "Notification repeat interval",
+				MarkdownDescription: `Notification repeat interval
+By default, Uptrace uses adaptive interval to wait before sending a notification again.
+
+The interval starts from 15 minutes and doubles every 3 notifications, e.g. 15m, 15m, 15m, 30m, 30m, 30m, 1h...
+
+The max interval is 24 hours.
+`,
 			},
 			"column_unit": schema.StringAttribute{
 				Computed:    true,
 				Optional:    true,
-				Description: "TODO",
+				Description: "The unit of the metric in the selected column",
 			},
 			"nulls_mode": schema.StringAttribute{
 				Computed:    true,
 				Optional:    true,
-				Description: "TODO",
+				Description: "Nulls handling mode: allow, forbid, convert. The default is allow.",
 			},
 			"tolerance": schema.StringAttribute{
 				Computed:    true,
 				Optional:    true,
-				Description: "TODO",
+				Description: "The tolerance of the automaticly triggered monitor (low, medium, or high).",
+				MarkdownDescription: `The tolerance of the automaticly triggered monitor (low, medium, or high).
+To reduce the number of alers, pick higher tolerance.
+`,
 			},
 			"notify_everyone_by_email": schema.BoolAttribute{
 				Computed:    true,
 				Optional:    true,
-				Description: "TODO",
+				Description: "Whether to notify everyone by email.",
 			},
 			"min_dev_value": schema.Float64Attribute{
 				Computed:    true,
 				Optional:    true,
-				Description: "TODO",
+				Description: "Min deviation value",
 			},
 			"min_dev_fraction": schema.Float64Attribute{
 				Computed:    true,
 				Optional:    true,
-				Description: "TODO",
+				Description: "Min deviation fraction",
 			},
 			"min_allowed_value": schema.Float64Attribute{
 				Computed:    true,
 				Optional:    true,
-				Description: "TODO",
+				Description: "Inclusive. Values lower than this are reported (At least min_allowed_value or max_allowed_value is required).",
 			},
 			"max_allowed_value": schema.Float64Attribute{
 				Computed:    true,
 				Optional:    true,
-				Description: "TODO",
+				Description: "Inclusive. Values greater than this are reported (At least min_allowed_value or max_allowed_value is required).",
 			},
 			"min_allowed_flapping_value": schema.Float64Attribute{
 				Computed:    true,
 				Optional:    true,
-				Description: "TODO",
+				Description: "Min allowed number",
+				MarkdownDescription: `Min allowed number
+Flapping occures when the monitor triggers the same alert for a short period of time because the monitored value changes back and forth around the trigger point. To reduce the noise, you can configure additional conditions required to close the alert.
+For example, the filesystem utilization monitor may fluctuate from 0.89 to 0.9, causing the alert status to change constantly. By configuring the maximum allowed value to 0.85, the alert won't be closed until the value changes from 0.9 to 0.85.
+`,
 			},
 			"max_allowed_flapping_value": schema.Float64Attribute{
 				Computed:    true,
 				Optional:    true,
-				Description: "TODO",
+				Description: "Max allowed number (trigger value: 500)",
+				MarkdownDescription: `Max allowed number (trigger value: 500)
+Flapping occures when the monitor triggers the same alert for a short period of time because the monitored value changes back and forth around the trigger point. To reduce the noise, you can configure additional conditions required to close the alert.
+For example, the filesystem utilization monitor may fluctuate from 0.89 to 0.9, causing the alert status to change constantly. By configuring the maximum allowed value to 0.85, the alert won't be closed until the value changes from 0.9 to 0.85.
+`,
 			},
 			"training_period": schema.Int32Attribute{
 				Computed:    true,
 				Optional:    true,
-				Description: "TODO",
+				Description: "Training period",
+				MarkdownDescription: `Training period
+Use smaller training periods for volatile values such as CPU usage.
+`,
 			},
 			"time_offset": schema.Int32Attribute{
 				Computed:    true,
 				Optional:    true,
-				Description: "TODO",
+				Description: "Time offset in milliseconds, e.g. 60000 delays check by 1 minute.",
 			},
 			"grouping_interval": schema.Int32Attribute{
 				Computed:    true,
 				Optional:    true,
-				Description: "TODO",
+				Description: "Grouping interval in milliseconds. The default 60000 (1 minute).",
 			},
 			"check_num_point": schema.Int32Attribute{
 				Computed:    true,
 				Optional:    true,
-				Description: "TODO",
+				Description: "Number of points to check. The default is 5.",
 			},
 			"team_ids": schema.ListAttribute{
 				ElementType: types.Int32Type,
 				Computed:    true,
 				Optional:    true,
-				Description: "TODO",
+				Description: "List of team ids to be notified by email. Overrides notifyEveryoneByEmail.",
 			},
 			"channel_ids": schema.ListAttribute{
 				ElementType: types.Int32Type,
 				Computed:    true,
 				Optional:    true,
-				Description: "TODO",
+				Description: "List of channel ids to send notifications.",
+			},
+			"bounds_source": schema.StringAttribute{
+				Computed:    true,
+				Optional:    true,
+				Description: "Bounds trigger source (manual or auto).",
 			},
 			// begin computed
 			"status": schema.StringAttribute{
 				Computed:    true,
-				Description: "TODO",
-			},
-			"column": schema.StringAttribute{
-				Computed:    true,
-				Description: "TODO",
+				Description: "The current status of the monitor.",
 			},
 			"project_id": schema.Int32Attribute{
 				Computed:    true,
-				Description: "TODO",
+				Description: "The ID of the project this monitor is associated with.",
 			},
-			"bounds_source": schema.StringAttribute{
+			"column": schema.StringAttribute{
 				Computed:    true,
-				Description: "TODO",
+				Description: "Column name to monitor, eg. spans.",
 			},
 		},
 	}
