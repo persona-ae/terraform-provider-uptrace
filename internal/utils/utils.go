@@ -14,14 +14,14 @@ import (
 func TFMonitorToUptraceMonitor(ctx context.Context, plan models.TFMonitorData, out *uptrace.Monitor) diag.Diagnostics {
 
 	if !plan.TeamIDs.IsUnknown() {
-		teamIds, diags := IntSetToSlice(ctx, plan.TeamIDs)
+		teamIds, diags := IntListToSlice(ctx, plan.TeamIDs)
 		if diags.HasError() {
 			return diags
 		}
 		out.TeamIDs = teamIds
 	}
 	if !plan.ChannelIDs.IsUnknown() {
-		channelIds, diags := IntSetToSlice(ctx, plan.ChannelIDs)
+		channelIds, diags := IntListToSlice(ctx, plan.ChannelIDs)
 		if diags.HasError() {
 			return diags
 		}
@@ -69,9 +69,6 @@ func TFMonitorToUptraceMonitor(ctx context.Context, plan models.TFMonitorData, o
 	if !plan.Status.IsUnknown() {
 		out.Status = plan.Status.ValueString()
 	}
-	if !plan.Error.IsUnknown() {
-		out.Error = plan.Error.ValueString()
-	}
 	if !plan.NotifyEveryoneByEmail.IsUnknown() {
 		out.NotifyEveryoneByEmail = plan.NotifyEveryoneByEmail.ValueBool()
 	}
@@ -80,15 +77,6 @@ func TFMonitorToUptraceMonitor(ctx context.Context, plan models.TFMonitorData, o
 	}
 	if !plan.Type.IsUnknown() {
 		out.Type = plan.Type.ValueString()
-	}
-	if !plan.CreatedAt.IsUnknown() {
-		out.CreatedAt = plan.CreatedAt.ValueFloat64()
-	}
-	if !plan.UpdatedAt.IsUnknown() {
-		out.UpdatedAt = plan.UpdatedAt.ValueFloat64()
-	}
-	if !plan.CheckedAt.IsUnknown() {
-		out.CheckedAt = plan.CheckedAt.ValueFloat64()
 	}
 
 	// params
@@ -147,11 +135,11 @@ func TFMonitorToUptraceMonitor(ctx context.Context, plan models.TFMonitorData, o
 func OverlayMonitorOnTFMonitorData(ctx context.Context, monitor uptrace.Monitor, data *models.TFMonitorData) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	data.TeamIDs, diags = Int32SliceToSet(monitor.TeamIDs)
+	data.TeamIDs, diags = Int32SliceToList(monitor.TeamIDs)
 	if diags.HasError() {
 		return diags
 	}
-	data.ChannelIDs, diags = Int32SliceToSet(monitor.ChannelIDs)
+	data.ChannelIDs, diags = Int32SliceToList(monitor.ChannelIDs)
 	if diags.HasError() {
 		return diags
 	}
@@ -171,7 +159,7 @@ func OverlayMonitorOnTFMonitorData(ctx context.Context, monitor uptrace.Monitor,
 		metrics = append(metrics, obj)
 	}
 
-	data.Metrics, _ = types.SetValue(types.ObjectType{
+	data.Metrics, _ = types.ListValue(types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"name":  types.StringType,
 			"alias": types.StringType,
@@ -183,12 +171,8 @@ func OverlayMonitorOnTFMonitorData(ctx context.Context, monitor uptrace.Monitor,
 	data.ProjectID = types.Int32Value(monitor.ProjectID)
 	data.Name = types.StringValue(monitor.Name)
 	data.Status = types.StringValue(monitor.Status)
-	data.Error = types.StringValue(monitor.Error)
 	data.NotifyEveryoneByEmail = types.BoolValue(monitor.NotifyEveryoneByEmail)
 	data.Type = types.StringValue(monitor.Type)
-	data.CreatedAt = types.Float64Value(monitor.CreatedAt)
-	data.UpdatedAt = types.Float64Value(monitor.UpdatedAt)
-	data.CheckedAt = types.Float64Value(monitor.CheckedAt)
 	data.RepeatInterval = types.StringValue(monitor.RepeatInterval.Strategy)
 
 	data.Tolerance = types.StringValue(monitor.Params.Tolerance)
@@ -211,7 +195,7 @@ func OverlayMonitorOnTFMonitorData(ctx context.Context, monitor uptrace.Monitor,
 	return nil
 }
 
-func IntSetToSlice(ctx context.Context, val types.Set) ([]int32, diag.Diagnostics) {
+func IntListToSlice(ctx context.Context, val types.List) ([]int32, diag.Diagnostics) {
 	if val.IsNull() || val.IsUnknown() {
 		return nil, nil
 	}
@@ -232,10 +216,10 @@ func convertElementsToInts(tfInts []types.Int32) ([]int32, diag.Diagnostics) {
 	return ints, nil
 }
 
-func Int32SliceToSet(ints []int32) (types.Set, diag.Diagnostics) {
+func Int32SliceToList(ints []int32) (types.List, diag.Diagnostics) {
 	values := make([]attr.Value, len(ints))
 	for i, v := range ints {
 		values[i] = types.Int32Value(v)
 	}
-	return types.SetValue(types.Int32Type, values)
+	return types.ListValue(types.Int32Type, values)
 }

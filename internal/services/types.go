@@ -5,16 +5,8 @@ type GetMonitorsResponse struct {
 	Monitors []Monitor `json:"monitors"`
 }
 
-type GetMonitorByIdResponse struct {
+type MonitorResponse struct {
 	Monitor Monitor `json:"monitor"`
-}
-
-type MonitorIdResponse struct {
-	Monitor monitorId `json:"monitor"`
-}
-
-type monitorId struct {
-	ID string `json:"id"`
 }
 
 type Monitor struct {

@@ -4,15 +4,20 @@ import "github.com/hashicorp/terraform-plugin-framework/types"
 
 // - "github.com/hashicorp/terraform-plugin-framework/types"
 type TFMonitorData struct {
-	ID                      types.String  `tfsdk:"id"`
+	// required
+
+	ID      types.String `tfsdk:"id"`
+	Name    types.String `tfsdk:"name"`
+	Type    types.String `tfsdk:"type"`
+	Query   types.String `tfsdk:"query"`
+	Metrics types.List   `tfsdk:"metrics"`
+
+	// optional
+
 	ProjectID               types.Int32   `tfsdk:"project_id"`
-	Name                    types.String  `tfsdk:"name"`
 	Status                  types.String  `tfsdk:"status"`
-	Error                   types.String  `tfsdk:"error"`
 	NotifyEveryoneByEmail   types.Bool    `tfsdk:"notify_everyone_by_email"`
 	RepeatInterval          types.String  `tfsdk:"repeat_interval"`
-	Type                    types.String  `tfsdk:"type"`
-	Query                   types.String  `tfsdk:"query"`
 	Column                  types.String  `tfsdk:"column"`
 	ColumnUnit              types.String  `tfsdk:"column_unit"`
 	BoundsSource            types.String  `tfsdk:"bounds_source"`
@@ -28,10 +33,6 @@ type TFMonitorData struct {
 	MaxAllowedFlappingValue types.Float64 `tfsdk:"max_allowed_flapping_value"`
 	Tolerance               types.String  `tfsdk:"tolerance"`
 	TrainingPeriod          types.Int32   `tfsdk:"training_period"`
-	TeamIDs                 types.Set     `tfsdk:"team_ids"`
-	ChannelIDs              types.Set     `tfsdk:"channel_ids"`
-	CreatedAt               types.Float64 `tfsdk:"created_at"`
-	UpdatedAt               types.Float64 `tfsdk:"updated_at"`
-	CheckedAt               types.Float64 `tfsdk:"checked_at"`
-	Metrics                 types.Set     `tfsdk:"metrics"`
+	TeamIDs                 types.List    `tfsdk:"team_ids"`
+	ChannelIDs              types.List    `tfsdk:"channel_ids"`
 }

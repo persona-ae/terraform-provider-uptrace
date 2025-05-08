@@ -101,17 +101,17 @@ func (u *UptraceClient) GetMonitors(ctx context.Context, out *GetMonitorsRespons
 	return u.do(ctx, "GET", endpoint, nil, out)
 }
 
-func (u *UptraceClient) GetMonitorById(ctx context.Context, id string, out *GetMonitorByIdResponse) error {
+func (u *UptraceClient) GetMonitorById(ctx context.Context, id string, out *MonitorResponse) error {
 	endpoint := fmt.Sprintf("/internal/v1/projects/%s/monitors/%s", u.ProjectID, id)
 	return u.do(ctx, "GET", endpoint, nil, out)
 }
 
-func (u *UptraceClient) CreateMonitor(ctx context.Context, req Monitor, out *Monitor) error {
+func (u *UptraceClient) CreateMonitor(ctx context.Context, req Monitor, out *MonitorResponse) error {
 	endpoint := fmt.Sprintf("/internal/v1/projects/%s/monitors", u.ProjectID)
 	return u.do(ctx, "POST", endpoint, req, out)
 }
 
-func (u *UptraceClient) UpdateMonitor(ctx context.Context, id string, req Monitor, out *MonitorIdResponse) error {
+func (u *UptraceClient) UpdateMonitor(ctx context.Context, id string, req Monitor, out *MonitorResponse) error {
 	endpoint := fmt.Sprintf("/internal/v1/projects/%s/monitors/%s", u.ProjectID, id)
 	return u.do(ctx, "PUT", endpoint, req, out)
 }
